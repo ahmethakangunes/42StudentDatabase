@@ -1,3 +1,11 @@
+## ************************************************************************** ##
+##                                                                            ##
+##             main.py for 42 Istanbul                	      			      ##
+##             Created on  : Nov 19 20:36:15 2022                             ##
+##             Last update : Nov 19 02:04:47 2022                             ##
+##             Made by : Hakan "agunes" Güneş <ahmethakangunes24@gmail.com>   ##
+##                                                                            ##
+## ************************************************************************** ##
 import psycopg2
 import requests
 import time
@@ -64,7 +72,7 @@ def day(blackhole):
 def getprivateinfo(login):
 	gsheetid = "1WfPZBxW5RhMX5o5jk352f9ZWVxCpMXoe"
 	sheet_name = ""
-	gsheet_url = "https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet={}".format(gsheetid, sheet_name)
+	gsheet_url = "https:##docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet={}".format(gsheetid, sheet_name)
 	istanbuldf = pd.read_csv(gsheet_url, index_col ="Login")
 	try:
 		istanbuldf = istanbuldf.loc[login]
@@ -103,7 +111,7 @@ def getuserinfo(login):
 	'Authorization': 'Bearer ' + token,
 	}
 	endpoint = "/v2/users/{}".format(login)
-	response = requests.get('https://api.intra.42.fr' + "{}".format(endpoint), headers=headers).json()
+	response = requests.get('https:##api.intra.42.fr' + "{}".format(endpoint), headers=headers).json()
 	login = response['login']
 	fullname = response['usual_full_name']
 	part = getpart(response)
@@ -132,7 +140,7 @@ def goupdate(token):
 	while True:
 		try:
 			endpoint = f"/v2/cursus/21/users?page[number]={page}"
-			response = requests.get('https://api.intra.42.fr' + "{}".format(endpoint), headers=headers, params=params)
+			response = requests.get('https:##api.intra.42.fr' + "{}".format(endpoint), headers=headers, params=params)
 			if (response.status_code == 200):
 				responsejs = response.json()
 				if (len(responsejs) > 1):
@@ -150,7 +158,7 @@ def goupdate(token):
 
 def get_access_token():
   response = requests.post(
-    "https://api.intra.42.fr/oauth/token",
+    "https:##api.intra.42.fr/oauth/token",
     data={"grant_type": "client_credentials"},
     auth=("u-s4t2ud-05b797961e39f9ca81738308f9b2a7e2ed752549806393581cf56fc0685062bb", "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"),
   )
