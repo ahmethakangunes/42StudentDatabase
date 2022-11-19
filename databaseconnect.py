@@ -29,11 +29,11 @@ conn = psycopg2.connect(
     database = database,
     sslmode = sslmode 
 )
+conn.autocommit = True
 
 part1projects = ["Libft", "get_next_line", "ft_printf", "Born2beroot", "push_swap", "Exam Rank 02", "minitalk", "so_long", "pipex", "FdF", "fract-ol"]
 part2projects = ["minishell", "Exam Rank 03", "Philosophers", "NetPractice", "cub3d", "miniRT", "CPP Module 00", "CPP Module 01", "CPP Module 02", "CPP Module 03", "CPP Module 04", "CPP Module 05", "CPP Module 06", "CPP Module 07", "CPP Module 08", "Exam Rank 04"]
 part3projects = ["webserv", "ft_irc", "ft_containers", "Exam Rank 05", "ft_transcendence", "Exam Rank 06", "Inception"]
-id = 0
 
 def createtable(name):
 	create = conn.cursor()
@@ -43,23 +43,57 @@ def createtable(name):
 	login TEXT,
 	fullname TEXT,
 	part TEXT,
-	blackhole TEXT,
-	lastseen TEXT,
+	blackhole INT,
+	lastseen INT,
+	coalition TEXT,
 	mail TEXT,
 	birthdate TEXT
 		)"""
 	create.execute(query_table)
-	conn.commit()
 
-def insert(id, login, fullname, part, blackhole, lastseen, mail, birthdate):
+def insert(id, login, fullname, part, blackhole, lastseen, coalition, mail, birthdate):
 	print("dönüyorum...")
-	insert = conn.cursor()
-	query_insert = "INSERT INTO students (id, login, fullname, part, blackhole, lastseen, mail, birthdate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-	val = (id, login, fullname, part, blackhole, lastseen, mail, birthdate)
-	insert.execute(query_insert, val)
-	conn.commit()
+	try:
+		insert = conn.cursor()
+		query_insert = "INSERT INTO students (id, login, fullname, part, blackhole, lastseen, coalition, mail, birthdate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+		val = (id, login, fullname, part, blackhole, lastseen, coalition, mail, birthdate)
+		insert.execute(query_insert, val)
+	except:
+		update = conn.cursor()
+		query_update = "UPDATE students SET login = %s, fullname = %s, part = %s, blackhole = %s, lastseen = %s, coalition %s, mail = %s, birthdate = %s WHERE id = %s"
+		val = (login, fullname, part, blackhole, lastseen, coalition, mail, birthdate, id)
+		update.execute(query_update, val)
 
-def day(blackhole):
+def getcoalition(login):
+	headers = {
+	'Authorization': 'Bearer ' + token,
+	}
+	endpoint = f"/v2/users/{login}/coalitions"
+	response = requests.get('https://api.intra.42.fr' + "{}".format(endpoint), headers=headers).json()
+	try:
+		coalition = str(response[0]['name'])
+		return coalition
+	except:
+		return "None"
+
+def getlastseen(login):
+	headers = {
+	'Authorization': 'Bearer ' + token,
+	}
+	endpoint = f"/v2/users/{login}/locations"
+	response = requests.get('https://api.intra.42.fr' + "{}".format(endpoint), headers=headers)
+	responsejs = response.json()
+	try:
+		lastday = datetime.strptime(responsejs[0]['end_at'],"%Y-%m-%dT%H:%M:%S.%fZ")
+		now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		now = datetime.now().strptime(now, "%Y-%m-%d %H:%M:%S")
+		lastseen = str(lastday - now)
+		lastseen = int(lastseen.split(" ")[0])
+		return lastseen * -1
+	except:
+		return 0
+
+def getblackhole(blackhole):
 	lastday = datetime.strptime(blackhole,"%Y-%m-%dT%H:%M:%S.%fZ")
 	now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 	now = datetime.now().strptime(now, "%Y-%m-%d %H:%M:%S")
@@ -67,7 +101,7 @@ def day(blackhole):
 	if blackhole.find("-") == 0:
 		return 0
 	else:
-		return blackhole.split(" ")[0]
+		return int(blackhole.split(" ")[0])
 
 def getprivateinfo(login):
 	gsheetid = "1WfPZBxW5RhMX5o5jk352f9ZWVxCpMXoe"
@@ -112,19 +146,23 @@ def getuserinfo(login):
 	}
 	endpoint = "/v2/users/{}".format(login)
 	response = requests.get('https://api.intra.42.fr' + "{}".format(endpoint), headers=headers).json()
+	id = response['id']
 	login = response['login']
 	fullname = response['usual_full_name']
 	part = getpart(response)
-	primarykey = response['id']
+	lastseen = getlastseen(login)
+	time.sleep(0.5)
+	coalition = getcoalition(login)
+	time.sleep(0.5)
 	privateinfo = getprivateinfo(login)
 	try:
-		blackhole = day(response['cursus_users'][1]['blackholed_at'])
+		blackhole = getblackhole(response['cursus_users'][1]['blackholed_at'])
 	except:
 		return 0
 	if privateinfo != 0 and blackhole != 0:
 		mail = privateinfo[1]
 		birthdate = privateinfo[0]
-		insert(primarykey, login, fullname, part, blackhole, "lastseen", mail, birthdate)
+		insert(id, login, fullname, part, blackhole, lastseen, coalition, mail, birthdate)
 
 def goupdate(token):
 	page = 1
@@ -133,7 +171,7 @@ def goupdate(token):
 	'Authorization': 'Bearer ' + token,
 		}
 	params = {
-	"page[size]": 100, 
+	"page[size]": 100,
 	"sort":"login", 
 	"filter[primary_campus_id]": 49,
 	}
@@ -145,13 +183,13 @@ def goupdate(token):
 				responsejs = response.json()
 				if (len(responsejs) > 1):
 					for i in range(len(responsejs)):
+						time.sleep(0.5)
 						user = responsejs[i]['login']
 						getuserinfo(user)
 				else:
 					break
-		except:
-			print("İstek sınırı doldu veya Intra cevap vermiyor.")
-			return
+		except BaseException as e:
+				print(e)
 		page += 1
 
 
@@ -160,10 +198,10 @@ def get_access_token():
   response = requests.post(
     "https://api.intra.42.fr/oauth/token",
     data={"grant_type": "client_credentials"},
-    auth=("u-s4t2ud-05b797961e39f9ca81738308f9b2a7e2ed752549806393581cf56fc0685062bb", "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"),
+    auth=("u-s4t2ud-ad74f3208071d0a40ffd78a2a0a7abc0562e35c85d9343c71717f7bfb5565f95", "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"),
   )
   return response.json()["access_token"]
 
-createtable("users")
+createtable("students")
 token = get_access_token()
 goupdate(token)
