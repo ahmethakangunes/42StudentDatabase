@@ -42,27 +42,89 @@ def createtable(name):
 	id SERIAL PRIMARY KEY,
 	login TEXT,
 	fullname TEXT,
-	part TEXT,
+	part INT,
 	blackhole INT,
 	lastseen INT,
 	coalition TEXT,
+	agu_count INT,
+	agu_used INT,
+	agu_left INT,
+	agu1duration FLOAT,
+	agu1start TEXT,
+	agu1end TEXT,
+	agu2duration FLOAT,
+	agu2start TEXT,
+	agu2end TEXT,
+	agu3duration FLOAT,
+	agu3start TEXT,
+	agu3end TEXT,
 	mail TEXT,
 	birthdate TEXT
 		)"""
 	create.execute(query_table)
 
-def insert(id, login, fullname, part, blackhole, lastseen, coalition, mail, birthdate):
-	print("dönüyorum...")
+def insert(userinfos):
 	try:
 		insert = conn.cursor()
-		query_insert = "INSERT INTO students (id, login, fullname, part, blackhole, lastseen, coalition, mail, birthdate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-		val = (id, login, fullname, part, blackhole, lastseen, coalition, mail, birthdate)
+		query_insert = "INSERT INTO students (id, login, fullname, part, blackhole, lastseen, coalition, agu_count, agu_used, agu_left, agu1duration, agu1start, agu1end, agu2duration, agu2start, agu2end, agu3duration, agu3start, agu3end, mail, birthdate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s , %s , %s , %s, %s, %s)"
+		val = (userinfos['id'], userinfos['login'], userinfos['fullname'], userinfos['part'],
+				userinfos['blackhole'], userinfos['lastseen'], userinfos['coalition'], 
+				userinfos['agu_count'], userinfos['agu_used'], userinfos['agu_left'], 
+				userinfos['agu1duration'], userinfos['agu1start'], userinfos['agu1end'], 
+				userinfos['agu2duration'], userinfos['agu2start'], userinfos['agu2end'], 
+				userinfos['agu3duration'], userinfos['agu3start'], userinfos['agu3end'], 
+				userinfos['mail'], userinfos['birthdate'])
 		insert.execute(query_insert, val)
 	except:
 		update = conn.cursor()
-		query_update = "UPDATE students SET login = %s, fullname = %s, part = %s, blackhole = %s, lastseen = %s, coalition %s, mail = %s, birthdate = %s WHERE id = %s"
-		val = (login, fullname, part, blackhole, lastseen, coalition, mail, birthdate, id)
+		query_update = "UPDATE students SET login = %s, fullname = %s, part = %s, blackhole = %s, lastseen = %s, coalition = %s, mail = %s, birthdate = %s agu_count = %s, agu_used = %s agu_left = %s, agu1duration = %s, agu1start = %s, agu1end = %s, agu2duration = %s, agu2start = %s, agu2end = %s, agu3duration = %s, agu3start = %s, agu3end = %s WHERE id = %s"
+		val = (userinfos['id'], userinfos['login'], userinfos['fullname'], userinfos['part'],
+				userinfos['blackhole'], userinfos['lastseen'], userinfos['coalition'], 
+				userinfos['agu_count'], userinfos['agu_used'], userinfos['agu_left'], 
+				userinfos['agu1duration'], userinfos['agu1start'], userinfos['agu1end'], 
+				userinfos['agu2duration'], userinfos['agu2start'], userinfos['agu2end'], 
+				userinfos['agu3duration'], userinfos['agu3start'], userinfos['agu3end'], 
+				userinfos['mail'], userinfos['birthdate'])
 		update.execute(query_update, val)
+
+def getaguinfos(login):
+	gsheetid = "1MM-i3FiladMfQK-l7VbIe98BaYvw8FD9"
+	sheet_name = ""
+	gsheet_url = "https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet={}".format(gsheetid, sheet_name)
+	agudf = pd.read_csv(gsheet_url, index_col ="login")
+	try:
+		agudf = agudf.loc[login].fillna(0)
+		aguinfos = {
+			"agu_count": int(agudf.loc["no_agu"]),
+			"agu_used": int(agudf.loc["agu_used"]),
+			"agu_left": int(agudf.loc["agu_left"]),
+			"agu1duration": float(agudf.loc["agu1_duration"]),
+			"agu1start": str(agudf.loc["agu1_start"]),
+			"agu1end": str(agudf.loc["agu1_end"]),
+			"agu2duration": float(agudf.loc["agu2_duration"]),
+			"agu2start": str(agudf.loc["agu2_start"]),
+			"agu2end": str(agudf.loc["agu2_end"]),
+			"agu3duration": float(agudf.loc["agu3_duration"]),
+			"agu3start": str(agudf.loc["agu3_start"]),
+			"agu3end": str(agudf.loc["agu3_end"]),
+		}
+		return aguinfos
+	except:
+		aguinfos = {
+			"agu_count": 0,
+			"agu_used": 0,
+			"agu_left": 180,
+			"agu1duration": float(0),
+			"agu1start": "0",
+			"agu1end": "0",
+			"agu2duration": float(0),
+			"agu2start": "0",
+			"agu2end": "0",
+			"agu3duration": float(0),
+			"agu3start": "0",
+			"agu3end": "0",
+		}
+		return aguinfos
 
 def getcoalition(login):
 	headers = {
@@ -75,23 +137,6 @@ def getcoalition(login):
 		return coalition
 	except:
 		return "None"
-
-def getlastseen(login):
-	headers = {
-	'Authorization': 'Bearer ' + token,
-	}
-	endpoint = f"/v2/users/{login}/locations"
-	response = requests.get('https://api.intra.42.fr' + "{}".format(endpoint), headers=headers)
-	responsejs = response.json()
-	try:
-		lastday = datetime.strptime(responsejs[0]['end_at'],"%Y-%m-%dT%H:%M:%S.%fZ")
-		now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-		now = datetime.now().strptime(now, "%Y-%m-%d %H:%M:%S")
-		lastseen = str(lastday - now)
-		lastseen = int(lastseen.split(" ")[0])
-		return lastseen * -1
-	except:
-		return 0
 
 def getblackhole(blackhole):
 	lastday = datetime.strptime(blackhole,"%Y-%m-%dT%H:%M:%S.%fZ")
@@ -120,6 +165,23 @@ def getprivateinfo(login):
 	except:
 		return 0
 
+def getlastseen(login):
+	headers = {
+	'Authorization': 'Bearer ' + token,
+	}
+	endpoint = f"/v2/users/{login}/locations"
+	response = requests.get('https://api.intra.42.fr' + "{}".format(endpoint), headers=headers)
+	responsejs = response.json()
+	try:
+		lastday = datetime.strptime(responsejs[0]['end_at'],"%Y-%m-%dT%H:%M:%S.%fZ")
+		now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		now = datetime.now().strptime(now, "%Y-%m-%d %H:%M:%S")
+		lastseen = str(lastday - now)
+		lastseen = int(lastseen.split(" ")[0])
+		return lastseen * -1
+	except:
+		return 0
+
 def getpart(response):
 	global part1projects, part2projects, part3projects
 	part = 1
@@ -138,7 +200,10 @@ def getpart(response):
 				part = 2
 			if (part1count >= 8 and part2count >= 15):
 				part = 3
-	return str(part)
+	return int(part)
+
+def Merge(dict1, dict2):
+    return(dict2.update(dict1))
 
 def getuserinfo(login):
 	headers = {
@@ -151,18 +216,29 @@ def getuserinfo(login):
 	fullname = response['usual_full_name']
 	part = getpart(response)
 	lastseen = getlastseen(login)
-	time.sleep(0.5)
+	time.sleep(0.3)
 	coalition = getcoalition(login)
-	time.sleep(0.5)
+	time.sleep(0.3)
 	privateinfo = getprivateinfo(login)
 	try:
 		blackhole = getblackhole(response['cursus_users'][1]['blackholed_at'])
 	except:
 		return 0
-	if privateinfo != 0 and blackhole != 0:
-		mail = privateinfo[1]
-		birthdate = privateinfo[0]
-		insert(id, login, fullname, part, blackhole, lastseen, coalition, mail, birthdate)
+	if privateinfo != 0 and blackhole > 0:
+		aguinfos = getaguinfos(login)
+		userinfos = {
+			"id": id,
+			"login": login,
+			"fullname": fullname,
+			"part": part,
+			"blackhole": blackhole,
+			"lastseen": lastseen,
+			"coalition": coalition,
+			"mail": privateinfo[1],
+			"birthdate": privateinfo[0],
+		}
+		userinfos.update(aguinfos)
+		insert(userinfos)
 
 def goupdate(token):
 	page = 1
@@ -194,14 +270,17 @@ def goupdate(token):
 
 
 
-def get_access_token():
+def get_access_token(clientid, secretid):
   response = requests.post(
     "https://api.intra.42.fr/oauth/token",
     data={"grant_type": "client_credentials"},
-    auth=("u-s4t2ud-ad74f3208071d0a40ffd78a2a0a7abc0562e35c85d9343c71717f7bfb5565f95", "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"),
+    auth=(clientid, secretid),
   )
   return response.json()["access_token"]
 
+
 createtable("students")
-token = get_access_token()
+clientid = "u-s4t2ud-8700067c2b8ae40122fc9500c248d10dc58b518941af08724bf7cfbd07a52c0f"
+secretid = "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"
+token = get_access_token(clientid, secretid)
 goupdate(token)
