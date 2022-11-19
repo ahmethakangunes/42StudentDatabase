@@ -66,7 +66,10 @@ def createtable(name):
 def insert(userinfos):
 	try:
 		insert = conn.cursor()
-		query_insert = "INSERT INTO students (id, login, fullname, part, blackhole, lastseen, coalition, agu_count, agu_used, agu_left, agu1duration, agu1start, agu1end, agu2duration, agu2start, agu2end, agu3duration, agu3start, agu3end, mail, birthdate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s , %s , %s , %s, %s, %s)"
+		query_insert = """INSERT INTO students (id, login, fullname, part, blackhole, lastseen, coalition, 
+		agu_count, agu_used, agu_left, agu1duration, agu1start, agu1end, agu2duration, agu2start, agu2end, 
+		agu3duration, agu3start, agu3end, mail, birthdate) 
+		VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s , %s , %s , %s, %s, %s)"""
 		val = (userinfos['id'], userinfos['login'], userinfos['fullname'], userinfos['part'],
 				userinfos['blackhole'], userinfos['lastseen'], userinfos['coalition'], 
 				userinfos['agu_count'], userinfos['agu_used'], userinfos['agu_left'], 
@@ -77,7 +80,12 @@ def insert(userinfos):
 		insert.execute(query_insert, val)
 	except:
 		update = conn.cursor()
-		query_update = "UPDATE students SET login = %s, fullname = %s, part = %s, blackhole = %s, lastseen = %s, coalition = %s, mail = %s, birthdate = %s agu_count = %s, agu_used = %s agu_left = %s, agu1duration = %s, agu1start = %s, agu1end = %s, agu2duration = %s, agu2start = %s, agu2end = %s, agu3duration = %s, agu3start = %s, agu3end = %s WHERE id = %s"
+		query_update = """UPDATE students SET login = %s, fullname = %s, part = %s, 
+		blackhole = %s, lastseen = %s, coalition = %s, mail = %s, birthdate = %s 
+		agu_count = %s, agu_used = %s agu_left = %s, agu1duration = %s, 
+		agu1start = %s, agu1end = %s, agu2duration = %s, agu2start = %s, 
+		agu2end = %s, agu3duration = %s, agu3start = %s, agu3end = %s 
+		WHERE id = %s"""
 		val = (userinfos['id'], userinfos['login'], userinfos['fullname'], userinfos['part'],
 				userinfos['blackhole'], userinfos['lastseen'], userinfos['coalition'], 
 				userinfos['agu_count'], userinfos['agu_used'], userinfos['agu_left'], 
@@ -202,9 +210,6 @@ def getpart(response):
 				part = 3
 	return int(part)
 
-def Merge(dict1, dict2):
-    return(dict2.update(dict1))
-
 def getuserinfo(login):
 	headers = {
 	'Authorization': 'Bearer ' + token,
@@ -216,9 +221,8 @@ def getuserinfo(login):
 	fullname = response['usual_full_name']
 	part = getpart(response)
 	lastseen = getlastseen(login)
-	time.sleep(0.3)
+	time.sleep(0.5)
 	coalition = getcoalition(login)
-	time.sleep(0.3)
 	privateinfo = getprivateinfo(login)
 	try:
 		blackhole = getblackhole(response['cursus_users'][1]['blackholed_at'])
@@ -259,7 +263,6 @@ def goupdate(token):
 				responsejs = response.json()
 				if (len(responsejs) > 1):
 					for i in range(len(responsejs)):
-						time.sleep(0.5)
 						user = responsejs[i]['login']
 						getuserinfo(user)
 				else:
@@ -280,7 +283,7 @@ def get_access_token(clientid, secretid):
 
 
 createtable("students")
-clientid = "u-s4t2ud-8700067c2b8ae40122fc9500c248d10dc58b518941af08724bf7cfbd07a52c0f"
-secretid = "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"
+clientid = "u-s4t2ud-d0263898197b769620c7ebe2babee45628f4861dc2f3edf713b5f6e5bed9b35b"
+secretid = "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"
 token = get_access_token(clientid, secretid)
 goupdate(token)
