@@ -1,6 +1,6 @@
 ## ************************************************************************** ##
 ##                                                                            ##
-##             main.py for 42 Istanbul                	      			      ##
+##             databaseconnect.py for 42 Istanbul                	      	  ##
 ##             Created on  : Nov 19 20:36:15 2022                             ##
 ##             Last update : Nov 19 02:04:47 2022                             ##
 ##             Made by : Hakan "agunes" Güneş <ahmethakangunes24@gmail.com>   ##
@@ -80,18 +80,17 @@ class DATABASE_42:
 		except:
 			update = conn.cursor()
 			query_update = """UPDATE students SET login = %s, fullname = %s, part = %s, 
-			blackhole = %s, lastseen = %s, coalition = %s, mail = %s, birthdate = %s 
-			agu_count = %s, agu_used = %s agu_left = %s, agu1duration = %s, 
-			agu1start = %s, agu1end = %s, agu2duration = %s, agu2start = %s, 
-			agu2end = %s, agu3duration = %s, agu3start = %s, agu3end = %s 
-			WHERE id = %s"""
-			val = (userinfos['id'], userinfos['login'], userinfos['fullname'], userinfos['part'],
+			blackhole = %s, lastseen = %s, coalition = %s, agu_count = %s, agu_used = %s, 
+			agu_left = %s, agu1duration = %s, agu1start = %s, agu1end = %s, agu2duration = %s, 
+			agu2start = %s, agu2end = %s, agu3duration = %s, agu3start = %s, agu3end = %s, 
+			mail = %s, birthdate = %s WHERE id = %s"""
+			val = (userinfos['login'], userinfos['fullname'], userinfos['part'],
 					userinfos['blackhole'], userinfos['lastseen'], userinfos['coalition'], 
 					userinfos['agu_count'], userinfos['agu_used'], userinfos['agu_left'], 
 					userinfos['agu1duration'], userinfos['agu1start'], userinfos['agu1end'], 
 					userinfos['agu2duration'], userinfos['agu2start'], userinfos['agu2end'], 
 					userinfos['agu3duration'], userinfos['agu3start'], userinfos['agu3end'], 
-					userinfos['mail'], userinfos['birthdate'])
+					userinfos['mail'], userinfos['birthdate'], userinfos['id'])
 			update.execute(query_update, val)
 
 	def getaguinfos(self, login: str) -> dict:
@@ -273,10 +272,9 @@ class DATABASE_42:
 							database.getuserinfo(user)
 					else:
 						break
-			except BaseException as e:
-					print(e)
+			except BaseException as error:
+					print(error)
 			page += 1
-
 
 
 
