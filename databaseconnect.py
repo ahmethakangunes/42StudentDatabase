@@ -31,16 +31,12 @@ conn = psycopg2.connect(
 )
 conn.autocommit = True
 
-part1projects = ["Libft", "get_next_line", "ft_printf", "Born2beroot", "push_swap", "Exam Rank 02", "minitalk", "so_long", "pipex", "FdF", "fract-ol"]
-part2projects = ["minishell", "Exam Rank 03", "Philosophers", "NetPractice", "cub3d", "miniRT", "CPP Module 00", "CPP Module 01", "CPP Module 02", "CPP Module 03", "CPP Module 04", "CPP Module 05", "CPP Module 06", "CPP Module 07", "CPP Module 08", "Exam Rank 04"]
-part3projects = ["webserv", "ft_irc", "ft_containers", "Exam Rank 05", "ft_transcendence", "Exam Rank 06", "Inception"]
-
 
 class DATABASE_42:
-	def __init__(self, name: str) -> None:
+	def __init__(self, name:str, token: str) -> None:
 		create = conn.cursor()
-		query_table = """
-		CREATE TABLE IF NOT EXISTS students(
+		query_table = f"""
+		CREATE TABLE IF NOT EXISTS {name}(
 		id SERIAL PRIMARY KEY,
 		login TEXT,
 		fullname TEXT,
@@ -63,10 +59,8 @@ class DATABASE_42:
 		mail TEXT,
 		birthdate TEXT
 			)"""
+		self.token = token
 		create.execute(query_table)
-		self.clientid = "u-s4t2ud-d0263898197b769620c7ebe2babee45628f4861dc2f3edf713b5f6e5bed9b35b"
-		self.secretid = "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"
-		self.token = database.get_access_token()
 
 	def insert(self, userinfos: dict) -> None:
 		try:
@@ -178,7 +172,7 @@ class DATABASE_42:
 		except:
 			return 0
 
-	def getlastseen(self,login: str) -> int:
+	def getlastseen(self, login: str) -> int:
 		headers = {
 		'Authorization': 'Bearer ' + self.token,
 		}
@@ -196,9 +190,16 @@ class DATABASE_42:
 			return 0
 
 	def getpart(self, response: requests.Response) -> int:
-		global part1projects, part2projects, part3projects
+		part1projects = ["Libft", "get_next_line", "ft_printf", "Born2beroot", 
+		"push_swap", "Exam Rank 02", "minitalk", "so_long", "pipex", "FdF", "fract-ol"]
+		####################################################################################
+		part2projects = ["minishell", "Exam Rank 03", "Philosophers", "NetPractice", "cub3d",
+		 "miniRT", "CPP Module 00", "CPP Module 01", "CPP Module 02", "CPP Module 03", "CPP Module 04",
+		  "CPP Module 05", "CPP Module 06", "CPP Module 07", "CPP Module 08", "Exam Rank 04"]
+		####################################################################################
+		part3projects = ["webserv", "ft_irc", "ft_containers", "Exam Rank 05", "ft_transcendence", "Exam Rank 06", "Inception"]
+		####################################################################################
 		part = 1
-		projectcount = 0
 		part1count = 0
 		part2count = 0
 		for i in range(len(response['projects_users'])):
@@ -278,17 +279,23 @@ class DATABASE_42:
 
 
 
-	def get_access_token(self) -> str:
+
+
+def get_access_token(clientid: str, secretid: str) -> str:
 		response = requests.post(
 			"https://api.intra.42.fr/oauth/token",
 			data={"grant_type": "client_credentials"},
-			auth=(self.clientid, self.secretid),
+			auth=(clientid, secretid),
 		)
 		return response.json()["access_token"]
 
 
 
-## DATABASE_42 init bölümünde olan tokenlerin geçerli olduğun kontrol et, tablo ismini "tablename" değişkenine ver ve başlat.
-tablename = "students"
-database = DATABASE_42(tablename)
-database.goupdate()
+#### Tokenlerin geçerliliğini kontrol et, tablename değişkenine istediğin tablo ismini ver ve başlat.
+if __name__ == '__main__':
+	tablename = "students"
+	clientid = "u-s4t2ud-8700067c2b8ae40122fc9500c248d10dc58b518941af08724bf7cfbd07a52c0f"
+	secretid = "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"
+	token = get_access_token(clientid, secretid)
+	database = DATABASE_42(tablename, token)
+	database.goupdate()
