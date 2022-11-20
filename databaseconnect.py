@@ -279,6 +279,7 @@ class DATABASE_42:
 
 
 
+
 def get_access_token(clientid: str, secretid: str) -> str:
 		response = requests.post(
 			"https://api.intra.42.fr/oauth/token",
