@@ -6,6 +6,8 @@
 ##             Made by : Hakan "agunes" Güneş <ahmethakangunes24@gmail.com>   ##
 ##                                                                            ##
 ## ************************************************************************** ##
+from threading import Thread
+import math
 import psycopg2
 import requests
 import time
@@ -249,11 +251,11 @@ class DATABASE_42:
 			userinfos.update(aguinfos)
 			database.insert(userinfos)
 
-	def goupdate(self) -> None:
+	def goupdate(page, token) -> None:
 		page = 1
 		x = 0
 		headers = {
-		'Authorization': 'Bearer ' + self.token,
+		'Authorization': 'Bearer ' + token,
 			}
 		params = {
 		"page[size]": 100,
@@ -288,6 +290,22 @@ def get_access_token(clientid: str, secretid: str) -> str:
 		)
 		return response.json()["access_token"]
 
+def getpage(token) -> None:
+        headers = {
+        'Authorization': 'Bearer ' + token,
+            }
+        params = {
+        "page[size]": 100,
+        "sort":"login", 
+        "filter[primary_campus_id]": 49,
+        }
+        try:
+            endpoint = f"/v2/cursus/21/users"
+            response = requests.get('https://api.intra.42.fr' + "{}".format(endpoint), headers=headers, params=params)
+            return (math.ceil(int(response.headers['X-Total']) / int(response.headers['X-Per-Page'])))
+        except BaseException as error:
+                print(error)
+
 
 
 #### Tokenlerin geçerliliğini kontrol et, tablename değişkenine istediğin tablo ismini ver ve başlat.
@@ -297,4 +315,9 @@ if __name__ == '__main__':
 	secretid = "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"
 	token = get_access_token(clientid, secretid)
 	database = DATABASE_42(tablename, token)
-	database.goupdate()
+	page = getpage(token)
+	for i in range(1, page + 1):
+		t = Thread(target=database.goupdate, args=(i, token))
+		t.start()
+		time.sleep(0.5)
+		i += 1
