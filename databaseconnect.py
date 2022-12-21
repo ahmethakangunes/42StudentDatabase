@@ -312,7 +312,7 @@ def getpage(token) -> None:
 if __name__ == '__main__':
 	tablename = "students"
 	clientid = "xxxxxxx"
-	secretid = "xxxxxxxs"
+	secretid = "xxxxxxx"
 	token = get_access_token(clientid, secretid)
 	database = DATABASE_42(tablename, token)
 	page = getpage(token)
