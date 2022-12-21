@@ -311,8 +311,8 @@ def getpage(token) -> None:
 #### Tokenlerin geçerliliğini kontrol et, tablename değişkenine istediğin tablo ismini ver ve başlat.
 if __name__ == '__main__':
 	tablename = "students"
-	clientid = "u-s4t2ud-8700067c2b8ae40122fc9500c248d10dc58b518941af08724bf7cfbd07a52c0f"
-	secretid = "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"
+	clientid = "xxxxxxx"
+	secretid = "xxxxxxxs"
 	token = get_access_token(clientid, secretid)
 	database = DATABASE_42(tablename, token)
 	page = getpage(token)
