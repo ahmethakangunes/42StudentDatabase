@@ -16,11 +16,11 @@ import datetime
 from datetime import datetime
 
 
-username = 'doadmin'
-password = 'AVNS_NU2lKTqXn97G8D4z_3J'
-host = 'db-postgresql-fra1-27675-do-user-12582068-0.b.db.ondigitalocean.com'
-port = '25060'
-database = 'students42'
+username = 'xxxx'
+password = 'xxxx'
+host = 'xxxx'
+port = 'xxxx'
+database = 'xxxx'
 sslmode = 'require'
 
 conn = psycopg2.connect(
